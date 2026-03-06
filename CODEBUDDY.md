@@ -1,10 +1,13 @@
 # CODEBUDDY.md
 
-This file provides guidance to CodeBuddy Code when working with code in this repository.
+This file provides guidance to CodeBuddy Code when working with code in this
+repository.
 
 ## Project Overview
 
-This is a Python serverless proxy implementation supporting VLESS, Trojan, and Shadowsocks protocols over WebSocket. Designed for PaaS platforms (e.g., Koyeb, Railway, Render).
+This is a Python serverless proxy implementation supporting VLESS, Trojan, and
+Shadowsocks protocols over WebSocket. Designed for PaaS platforms (e.g., Koyeb,
+Railway, Render).
 
 ## Common Commands
 
@@ -50,16 +53,16 @@ docker run -p 3000:3000 -e UUID=xxx -e DOMAIN=xxx python-ws
 
 ### Key Environment Variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| UUID | No | auto-generated | Authentication UUID |
-| PORT | No | 3000 | Server port |
-| DOMAIN | Yes | - | Domain for subscription |
-| NEZHA_SERVER | No | - | Nezha v0/v1 server |
-| NEZHA_KEY | No | - | Nezha authentication key |
-| SUB_PATH | No | sub | Subscription path |
-| WSPATH | No | UUID[:8] | WebSocket path |
-| IP_PRIORITY | No | ipv4 | IP priority: ipv6, ipv4, random |
+| Variable     | Required | Default        | Description                     |
+| ------------ | -------- | -------------- | ------------------------------- |
+| UUID         | No       | auto-generated | Authentication UUID             |
+| PORT         | No       | 3000           | Server port                     |
+| DOMAIN       | Yes      | -              | Domain for subscription         |
+| NEZHA_SERVER | No       | -              | Nezha v0/v1 server              |
+| NEZHA_KEY    | No       | -              | Nezha authentication key        |
+| SUB_PATH     | No       | sub            | Subscription path               |
+| WSPATH       | No       | UUID[:8]       | WebSocket path                  |
+| IP_PRIORITY  | No       | ipv4           | IP priority: ipv6, ipv4, random |
 
 ### Dependencies
 

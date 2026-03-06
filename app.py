@@ -26,6 +26,7 @@ WSPATH = os.environ.get('WSPATH', UUID[:8])          # 节点路径
 PORT = int(os.environ.get('SERVER_PORT') or os.environ.get('PORT') or 3000)  # http和ws端口，默认自动优先获取容器分配的端口
 AUTO_ACCESS = os.environ.get('AUTO_ACCESS', '').lower() == 'true' # 自动访问保活,默认关闭,true开启,false关闭,需同时填写DOMAIN变量
 DEBUG = os.environ.get('DEBUG', '').lower() == 'true' # 保持默认,调试使用,true开启调试
+IP_PRIORITY = os.environ.get('IP_PRIORITY', 'ipv4').lower()  # IP优先级: ipv6, ipv4, random，默认ipv4
 
 # 全局变量
 CurrentDomain = DOMAIN
@@ -36,8 +37,8 @@ ISP = ''
 # dns server
 DNS_SERVERS = ['8.8.4.4', '1.1.1.1']
 BLOCKED_DOMAINS = [
-    'speedtest.net', 'fast.com', 'speedtest.cn', 'speed.cloudflare.com', 'speedof.me',
-    'testmy.net', 'bandwidth.place', 'speed.io', 'librespeed.org', 'speedcheck.org'
+  #  'speedtest.net', 'fast.com', 'speedtest.cn', 'speed.cloudflare.com', 'speedof.me',
+    #'testmy.net', 'bandwidth.place', 'speed.io', 'librespeed.org', 'speedcheck.org'
 ]
 
 # 日志级别
@@ -109,8 +110,12 @@ async def get_ip():
     global CurrentDomain, Tls, CurrentPort
     if not DOMAIN or DOMAIN == 'your-domain.com':
         try:
+            if IP_PRIORITY == 'ipv6':
+                url = 'https://api-ipv6.ip.sb/ip'
+            else:
+                url = 'https://api-ipv4.ip.sb/ip'
             async with aiohttp.ClientSession() as session:
-                async with session.get('https://api-ipv4.ip.sb/ip', timeout=5) as resp:
+                async with session.get(url, timeout=5) as resp:
                     if resp.status == 200:
                         ip = await resp.text()
                         CurrentDomain = ip.strip()
@@ -126,16 +131,22 @@ async def get_ip():
         Tls = 'tls'
         CurrentPort = 443
 
+import random
+
 async def resolve_host(host: str) -> str:
     try:
         ipaddress.ip_address(host)
         return host
     except:
         pass
-    
+
+    ipv4_addrs = []
+    ipv6_addrs = []
+
     for dns_server in DNS_SERVERS:
         try:
             async with aiohttp.ClientSession() as session:
+                # 获取IPv4记录
                 url = f'https://dns.google/resolve?name={host}&type=A'
                 async with session.get(url, timeout=5) as resp:
                     if resp.status == 200:
@@ -143,11 +154,32 @@ async def resolve_host(host: str) -> str:
                         if data.get('Status') == 0 and data.get('Answer'):
                             for answer in data['Answer']:
                                 if answer.get('type') == 1:
-                                    return answer.get('data')
+                                    ipv4_addrs.append(answer.get('data'))
+
+                # 获取IPv6记录
+                url = f'https://dns.google/resolve?name={host}&type=AAAA'
+                async with session.get(url, timeout=5) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        if data.get('Status') == 0 and data.get('Answer'):
+                            for answer in data['Answer']:
+                                if answer.get('type') == 28:
+                                    ipv6_addrs.append(answer.get('data'))
         except:
             continue
-    
-    return host  # 如果解析失败，返回原始域名
+
+    # 根据优先级选择IP
+    if IP_PRIORITY == 'ipv6' and ipv6_addrs:
+        return random.choice(ipv6_addrs)
+    elif IP_PRIORITY == 'random':
+        all_addrs = ipv4_addrs + ipv6_addrs
+        if all_addrs:
+            return random.choice(all_addrs)
+    elif ipv4_addrs:
+        return ipv4_addrs[0]
+
+    # 如果没有解析到任何记录，返回原始域名
+    return host
 
 class ProxyHandler:
     def __init__(self, uuid: str):

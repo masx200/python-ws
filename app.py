@@ -176,7 +176,7 @@ async def resolve_host(host: str) -> str:
         if all_addrs:
             return random.choice(all_addrs)
     elif ipv4_addrs:
-        return ipv4_addrs[0]
+        return random.choice(ipv4_addrs)
 
     # 如果没有解析到任何记录，返回原始域名
     return host
